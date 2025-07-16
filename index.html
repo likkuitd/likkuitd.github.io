@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌟 이름 궁합 계산기 💖</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Jua', sans-serif;
+      background: linear-gradient(135deg, #ffe4e1 0%, #e6e6fa 100%);
+      text-align: center;
+      padding: 2em;
+      font-size: 20px;
+    }
+    input {
+      padding: 10px;
+      font-size: 18px;
+      margin: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      font-family: 'Jua', sans-serif;
+      padding: 10px 20px;
+      margin-top: 20px;
+      font-size: 24px;
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .letters-row, .numbers-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 10px 0;
+    }
+    .letter-box, .number-box, .pair-box {
+      margin: 5px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .letter-box {
+      background-color: #ffb6c1;
+      color: white;
+      font-size: 28px;
+    }
+    .number-box {
+      background-color: #ffe4e1;
+      color: #b22222;
+      font-size: 22px;
+    }
+    .pair-box {
+      background-color: #ff69b4;
+      color: white;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌟 이름 궁합 계산기 💖</h1>
+  <input id="name1" placeholder="당신의 이름" />
+  <input id="name2" placeholder="상대방의 이름" />
+  <br />
+  <button onclick="startCalculation()">궁합 보기 💘</button>
+
+  <div id="step1"></div>
+  <div id="step2"></div>
+  <div id="step3"></div>
+  <div id="result"></div>
+
+  <audio id="tension-sound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+  <script>
+    const strokesMap = {
+      'ㄱ':1,'ㄴ':1,'ㄷ':2,'ㄹ':3,'ㅁ':3,'ㅂ':3,'ㅅ':2,'ㅇ':1,'ㅈ':2,'ㅊ':3,'ㅋ':2,'ㅌ':3,'ㅍ':4,'ㅎ':3,
+      'ㅏ':2,'ㅑ':3,'ㅓ':2,'ㅕ':3,'ㅗ':2,'ㅛ':3,'ㅜ':2,'ㅠ':3,'ㅡ':1,'ㅣ':1
+    };
+    const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    const JUNG = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+    const JONG = ['', 'ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+    function getJungStroke(j) {
+      const combo = {
+        'ㅘ':['ㅗ','ㅏ'],'ㅙ':['ㅗ','ㅐ'],'ㅚ':['ㅗ','ㅣ'],
+        'ㅝ':['ㅜ','ㅓ'],'ㅞ':['ㅜ','ㅔ'],'ㅟ':['ㅜ','ㅣ'],'ㅢ':['ㅡ','ㅣ']
+      };
+      if (strokesMap[j]) return strokesMap[j];
+      if (combo[j]) return combo[j].reduce((a,c)=>a+strokesMap[c],0);
+      return 0;
+    }
+
+    function getStroke(c){
+      const code = c.charCodeAt(0);
+      if (code < 0xAC00 || code > 0xD7A3) return 0;
+      const base = code - 0xAC00;
+      const cho = CHO[Math.floor(base / 588)];
+      const jung = JUNG[Math.floor((base % 588) / 28)];
+      const jong = JONG[base % 28];
+      return (strokesMap[cho]||0)+(getJungStroke(jung)||0)+(strokesMap[jong]||0);
+    }
+
+    function startCalculation(){
+      const n1 = document.getElementById('name1').value.trim();
+      const n2 = document.getElementById('name2').value.trim();
+      if(!n1 || !n2){ alert('이름을 모두 입력하세요!'); return; }
+
+      let mixed = '';
+      for(let i=0; i<Math.max(n1.length,n2.length); i++){
+        if(n1[i]) mixed += n1[i];
+        if(n2[i]) mixed += n2[i];
+      }
+
+      const strokes = mixed.split('').map(getStroke);
+
+      document.getElementById('step1').innerHTML =
+        '<div class="letters-row">' +
+        mixed.split('').map(c => `<div class="letter-box">${c}</div>`).join('') +
+        '</div>' +
+        '<div class="numbers-row">' +
+        strokes.map(n => `<div class="number-box">${n}</div>`).join('') +
+        '</div>';
+
+      const pairs = [];
+      for (let i = 0; i < strokes.length - 1; i += 2) {
+        pairs.push(strokes[i] + strokes[i + 1]);
+      }
+      window._pairs = pairs;
+      document.getElementById('step2').innerHTML =
+        '<button onclick="showThreeNumbers()">다음 단계로 →</button>';
+
+      // 초기화
+      document.getElementById('step3').innerHTML = '';
+      document.getElementById('result').innerHTML = '';
+    }
+
+    function showThreeNumbers() {
+      const pairs = window._pairs;
+      document.getElementById('step2').innerHTML =
+        '<div class="numbers-row">' +
+        pairs.map(p => `<div class="pair-box">${p}</div>`).join('') +
+        '</div>' +
+        '<button onclick="goToStep3()">결과 보기 🎉</button>';
+    }
+
+    function goToStep3() {
+      const [a, b, c] = window._pairs;
+      const result1 = (a + b) % 10;
+      const result2 = c % 10;
+      const percent = parseInt(`${result1}${result2}`);
+
+      document.getElementById('tension-sound').play();
+
+      let msg = '';
+      if (percent >= 90) msg = '천생연분! 운명 그 자체 💍';
+      else if (percent >= 75) msg = '궁합이 꽤 좋아요! 💑';
+      else if (percent >= 50) msg = '조금 노력하면 멋진 인연이 될 수 있어요! 🌈';
+      else if (percent >= 30) msg = '성격 차이를 이해해보려는 노력이 필요할지도...? 🤔';
+      else msg = '그냥 친구로 지내는 게 좋을지도 몰라요... 😅';
+
+      document.getElementById('step3').innerHTML = '';
+      document.getElementById('result').innerHTML =
+        `<h2>❤️ 궁합 퍼센트: ${percent}% ❤️</h2><p>${msg}</p><br><button onclick="location.reload()">다른 사람은 어떨까? 🔁</button>`;
+      document.getElementById('step2').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
